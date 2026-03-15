@@ -145,11 +145,8 @@ function ReminderBox({ message }: { message: string | null }) {
   if (!message) return null
 
   return (
-    <div className="flex-1 min-h-0 overflow-hidden w-full rounded-xl bg-blue-50 border-2 border-blue-300 px-4 py-2 shadow-sm">
-      <div className="text-sm font-semibold text-blue-600 uppercase tracking-wide mb-1">
-        📝 Message from Barry
-      </div>
-      <div className="text-base text-blue-900 leading-snug overflow-hidden">{message}</div>
+    <div className="flex-shrink-0 w-full rounded-lg bg-blue-50 border border-blue-300 px-3 py-2 shadow-sm">
+      <span className="text-base text-blue-900">💬 {message}</span>
     </div>
   )
 }
@@ -158,11 +155,9 @@ function CarerNoteBox({ note }: { note: string | null }) {
   if (!note) return null
 
   return (
-    <div className="flex-1 min-h-0 overflow-hidden w-full rounded-xl bg-purple-50 border-2 border-purple-400 px-4 py-2 shadow-sm">
-      <div className="text-sm font-semibold text-purple-600 uppercase tracking-wide mb-1">
-        📋 Note for Carer
-      </div>
-      <div className="text-base text-purple-900 leading-snug whitespace-pre-wrap overflow-hidden">{note}</div>
+    <div className="flex-shrink-0 w-full rounded-lg bg-purple-50 px-3 py-1">
+      <span className="text-sm text-purple-700 font-medium">📋 Carer:</span>{' '}
+      <span className="text-sm text-purple-900">{note}</span>
     </div>
   )
 }
@@ -171,7 +166,7 @@ function MusicSection() {
   const [activeSrc, setActiveSrc] = useState<string | null>(null)
 
   const handleArtist = (src: string) => {
-    setActiveSrc(src)
+    setActiveSrc(prev => prev === src ? prev : src)
   }
 
   const handleStop = () => {
@@ -179,54 +174,49 @@ function MusicSection() {
   }
 
   return (
-    <>
-      {/* YouTube overlay — shown fixed over everything when active */}
+    <div className="flex-shrink-0 w-full rounded-xl bg-yellow-50 border-2 border-yellow-300 px-3 py-2 shadow-sm">
+      <div className="text-sm font-semibold text-yellow-700 uppercase tracking-wide mb-2">
+        🎵 Music
+      </div>
+      <div className="flex flex-row gap-2">
+        {MUSIC_ARTISTS.map(({ emoji, label, src }) => (
+          <button
+            key={label}
+            onClick={() => handleArtist(src)}
+            className={`flex-1 flex items-center justify-center gap-2 border-2 border-yellow-400 rounded-xl px-3 py-3 text-base font-bold text-yellow-900 shadow transition-colors select-none ${
+              activeSrc === src
+                ? 'bg-yellow-300 active:bg-yellow-400'
+                : 'bg-yellow-100 hover:bg-yellow-200 active:bg-yellow-300'
+            }`}
+          >
+            <span>{emoji}</span>
+            <span>{label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Inline YouTube player — shown below buttons when active */}
       {activeSrc && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex flex-col items-center justify-center p-6">
-          <div className="w-full max-w-3xl">
-            <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
-              <iframe
-                key={activeSrc}
-                src={activeSrc}
-                className="absolute inset-0 w-full h-full rounded-xl"
-                allow="autoplay; encrypted-media"
-                allowFullScreen
-                title="Music Player"
-              />
-            </div>
-            <button
-              onClick={handleStop}
-              className="mt-4 w-full bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold rounded-2xl px-6 py-3 text-xl shadow transition-colors select-none"
-            >
-              ⏹ Stop Music
-            </button>
+        <div className="mt-2">
+          <div className="relative w-full rounded-xl overflow-hidden" style={{ paddingTop: '56.25%' }}>
+            <iframe
+              key={activeSrc}
+              src={activeSrc}
+              className="absolute inset-0 w-full h-full"
+              allow="autoplay; encrypted-media"
+              allowFullScreen
+              title="Music Player"
+            />
           </div>
+          <button
+            onClick={handleStop}
+            className="mt-2 w-full bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold rounded-2xl px-6 py-3 text-xl shadow transition-colors select-none"
+          >
+            ⏹ Stop Music
+          </button>
         </div>
       )}
-
-      {/* Music buttons — always visible */}
-      <div className="flex-shrink-0 w-full rounded-xl bg-yellow-50 border-2 border-yellow-300 px-3 py-2 shadow-sm">
-        <div className="text-sm font-semibold text-yellow-700 uppercase tracking-wide mb-2">
-          🎵 Music
-        </div>
-        <div className="flex flex-row gap-2">
-          {MUSIC_ARTISTS.map(({ emoji, label, src }) => (
-            <button
-              key={label}
-              onClick={() => handleArtist(src)}
-              className={`flex-1 flex items-center justify-center gap-2 border-2 border-yellow-400 rounded-xl px-3 py-3 text-base font-bold text-yellow-900 shadow transition-colors select-none ${
-                activeSrc === src
-                  ? 'bg-yellow-300 active:bg-yellow-400'
-                  : 'bg-yellow-100 hover:bg-yellow-200 active:bg-yellow-300'
-              }`}
-            >
-              <span>{emoji}</span>
-              <span>{label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </>
+    </div>
   )
 }
 
@@ -373,16 +363,19 @@ export default function TabletPage() {
       {/* Row 3: Status banner — compact */}
       <StatusBanner location={status} />
 
-      {/* Row 4: Carer note + Reminder — flex-1 to fill remaining space */}
-      <div className="flex flex-col gap-2 flex-1 min-h-0">
-        <CarerNoteBox note={carerNote} />
-        <ReminderBox message={latestReminder} />
-      </div>
+      {/* Row 4: Carer note — single line, only if content exists */}
+      <CarerNoteBox note={carerNote} />
 
-      {/* Row 5: Call Barry button */}
+      {/* Row 5: Reminder — compact */}
+      <ReminderBox message={latestReminder} />
+
+      {/* Spacer — pushes Call Barry + Music to bottom */}
+      <div className="flex-1" />
+
+      {/* Row 7: Call Barry button */}
       <CallBarryButton />
 
-      {/* Row 6: Music — compact horizontal row */}
+      {/* Row 8: Music — compact with inline player */}
       <MusicSection />
 
     </main>
