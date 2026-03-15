@@ -53,7 +53,7 @@ function Greeting() {
   if (!greeting) return null
 
   return (
-    <div className={`text-center text-5xl font-bold mb-4 leading-tight ${greeting.className}`}>
+    <div className={`text-2xl font-bold leading-tight ${greeting.className}`}>
       {greeting.text}
     </div>
   )
@@ -79,9 +79,9 @@ function Clock() {
   }, [])
 
   return (
-    <div className="text-center mb-8 leading-none">
-      <div className="text-8xl font-bold text-gray-800 tracking-tight">{time}</div>
-      <div className="text-4xl font-semibold text-gray-600 mt-3">{dayDate}</div>
+    <div className="text-center flex-shrink-0 leading-none">
+      <div className="text-6xl font-bold text-gray-800 tracking-tight">{time}</div>
+      <div className="text-xl font-semibold text-gray-600 mt-1">{dayDate}</div>
     </div>
   )
 }
@@ -115,11 +115,8 @@ function WeatherWidget() {
   if (!weather || !weather.ok) return null
 
   return (
-    <div className="w-full max-w-xl rounded-2xl bg-blue-50 border-2 border-blue-200 px-6 py-4 mb-6 shadow-sm text-center">
-      <div className="text-3xl font-semibold text-blue-800">
-        {weather.emoji} {weather.description} · {weather.temp}°C{' '}
-        <span className="text-2xl font-normal text-blue-600">(feels like {weather.feelsLike}°C)</span>
-      </div>
+    <div className="text-base text-blue-700">
+      {weather.emoji} {weather.description} · {weather.temp}°C (feels like {weather.feelsLike}°C)
     </div>
   )
 }
@@ -131,19 +128,14 @@ function StatusBanner({ location }: { location: 'home' | 'dublin' | null }) {
 
   return (
     <div
-      className={`w-full rounded-2xl px-8 py-6 mb-8 text-center shadow-md ${
+      className={`flex-shrink-0 w-full rounded-xl px-4 py-2 text-center shadow-sm ${
         isHome
-          ? 'bg-green-100 border-4 border-green-400'
-          : 'bg-amber-100 border-4 border-amber-400'
+          ? 'bg-green-100 border-2 border-green-400'
+          : 'bg-amber-100 border-2 border-amber-400'
       }`}
     >
-      <div className={`text-5xl font-bold mb-2 ${isHome ? 'text-green-800' : 'text-amber-800'}`}>
-        {isHome ? '🏠 Barry is at HOME today' : '🏙️ Barry is in DUBLIN today'}
-      </div>
-      <div className={`text-3xl ${isHome ? 'text-green-700' : 'text-amber-700'}`}>
-        {isHome
-          ? 'You can go for coffee or mass today'
-          : "Can't go to Drogheda today"}
+      <div className={`text-xl font-bold ${isHome ? 'text-green-800' : 'text-amber-800'}`}>
+        {isHome ? '🏠 Barry is at HOME today — You can go for coffee or mass' : '🏙️ Barry is in DUBLIN today — Can\'t go to Drogheda today'}
       </div>
     </div>
   )
@@ -153,11 +145,11 @@ function ReminderBox({ message }: { message: string | null }) {
   if (!message) return null
 
   return (
-    <div className="w-full rounded-2xl bg-blue-50 border-4 border-blue-300 px-8 py-6 mb-8 shadow-md">
-      <div className="text-2xl font-semibold text-blue-600 mb-2 uppercase tracking-wide">
+    <div className="flex-1 min-h-0 overflow-hidden w-full rounded-xl bg-blue-50 border-2 border-blue-300 px-4 py-2 shadow-sm">
+      <div className="text-sm font-semibold text-blue-600 uppercase tracking-wide mb-1">
         📝 Message from Barry
       </div>
-      <div className="text-4xl text-blue-900 leading-snug">{message}</div>
+      <div className="text-base text-blue-900 leading-snug overflow-hidden">{message}</div>
     </div>
   )
 }
@@ -166,11 +158,11 @@ function CarerNoteBox({ note }: { note: string | null }) {
   if (!note) return null
 
   return (
-    <div className="w-full rounded-2xl bg-purple-50 border-4 border-purple-400 px-8 py-6 mb-8 shadow-md">
-      <div className="text-2xl font-semibold text-purple-600 mb-2 uppercase tracking-wide">
+    <div className="flex-1 min-h-0 overflow-hidden w-full rounded-xl bg-purple-50 border-2 border-purple-400 px-4 py-2 shadow-sm">
+      <div className="text-sm font-semibold text-purple-600 uppercase tracking-wide mb-1">
         📋 Note for Carer
       </div>
-      <div className="text-3xl text-purple-900 leading-snug whitespace-pre-wrap">{note}</div>
+      <div className="text-base text-purple-900 leading-snug whitespace-pre-wrap overflow-hidden">{note}</div>
     </div>
   )
 }
@@ -187,50 +179,54 @@ function MusicSection() {
   }
 
   return (
-    <div className="w-full rounded-2xl bg-yellow-50 border-4 border-yellow-300 px-8 py-6 mb-8 shadow-md">
-      <div className="text-2xl font-semibold text-yellow-700 mb-4 uppercase tracking-wide">
-        🎵 Music
-      </div>
-      <div className="flex flex-col sm:flex-row gap-4 mb-4">
-        {MUSIC_ARTISTS.map(({ emoji, label, src }) => (
-          <button
-            key={label}
-            onClick={() => handleArtist(src)}
-            className={`flex-1 flex items-center justify-center gap-3 border-2 border-yellow-400 rounded-2xl px-6 py-5 text-3xl font-bold text-yellow-900 shadow transition-colors select-none ${
-              activeSrc === src
-                ? 'bg-yellow-300 active:bg-yellow-400'
-                : 'bg-yellow-100 hover:bg-yellow-200 active:bg-yellow-300'
-            }`}
-            style={{ minHeight: '80px' }}
-          >
-            <span>{emoji}</span>
-            <span>{label}</span>
-          </button>
-        ))}
-      </div>
-
+    <>
+      {/* YouTube overlay — shown fixed over everything when active */}
       {activeSrc && (
-        <>
-          <div className="w-full relative" style={{ paddingTop: '56.25%' }}>
-            <iframe
-              key={activeSrc}
-              src={activeSrc}
-              className="absolute inset-0 w-full h-full rounded-xl"
-              allow="autoplay; encrypted-media"
-              allowFullScreen
-              title="Music Player"
-            />
+        <div className="fixed inset-0 z-50 bg-black/80 flex flex-col items-center justify-center p-6">
+          <div className="w-full max-w-3xl">
+            <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
+              <iframe
+                key={activeSrc}
+                src={activeSrc}
+                className="absolute inset-0 w-full h-full rounded-xl"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+                title="Music Player"
+              />
+            </div>
+            <button
+              onClick={handleStop}
+              className="mt-4 w-full bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold rounded-2xl px-6 py-3 text-xl shadow transition-colors select-none"
+            >
+              ⏹ Stop Music
+            </button>
           </div>
-          <button
-            onClick={handleStop}
-            className="mt-4 w-full bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold rounded-2xl px-6 py-5 text-3xl shadow transition-colors select-none"
-            style={{ minHeight: '80px' }}
-          >
-            ⏹ Stop
-          </button>
-        </>
+        </div>
       )}
-    </div>
+
+      {/* Music buttons — always visible */}
+      <div className="flex-shrink-0 w-full rounded-xl bg-yellow-50 border-2 border-yellow-300 px-3 py-2 shadow-sm">
+        <div className="text-sm font-semibold text-yellow-700 uppercase tracking-wide mb-2">
+          🎵 Music
+        </div>
+        <div className="flex flex-row gap-2">
+          {MUSIC_ARTISTS.map(({ emoji, label, src }) => (
+            <button
+              key={label}
+              onClick={() => handleArtist(src)}
+              className={`flex-1 flex items-center justify-center gap-2 border-2 border-yellow-400 rounded-xl px-3 py-3 text-base font-bold text-yellow-900 shadow transition-colors select-none ${
+                activeSrc === src
+                  ? 'bg-yellow-300 active:bg-yellow-400'
+                  : 'bg-yellow-100 hover:bg-yellow-200 active:bg-yellow-300'
+              }`}
+            >
+              <span>{emoji}</span>
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
   )
 }
 
@@ -282,19 +278,13 @@ function CallBarryButton() {
   const { label, className, disabled } = buttonConfig[callState]
 
   return (
-    <>
-      <button
-        onClick={handleCall}
-        disabled={disabled}
-        className={`mt-4 w-full max-w-xl font-bold rounded-3xl shadow-lg flex items-center justify-center px-8 py-8 text-4xl transition-colors select-none ${className}`}
-        style={{ minHeight: '120px' }}
-      >
-        {label}
-      </button>
-      <p className="mt-6 text-xl text-gray-400 text-center">
-        Tap the button to send Barry a message
-      </p>
-    </>
+    <button
+      onClick={handleCall}
+      disabled={disabled}
+      className={`flex-shrink-0 w-full font-bold rounded-2xl shadow-lg flex items-center justify-center px-6 py-3 text-xl transition-colors select-none ${className}`}
+    >
+      {label}
+    </button>
   )
 }
 
@@ -369,30 +359,32 @@ export default function TabletPage() {
   }, [])
 
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-start px-6 py-10">
-      {/* Greeting */}
-      <Greeting />
+    <main className="h-screen overflow-hidden flex flex-col bg-gray-50 p-3 gap-2">
 
-      {/* Weather */}
-      <WeatherWidget />
+      {/* Row 1: Greeting + Weather — compact, one line each */}
+      <div className="text-center flex-shrink-0 flex flex-col items-center gap-0.5">
+        <Greeting />
+        <WeatherWidget />
+      </div>
 
-      {/* Clock */}
+      {/* Row 2: Clock — large but not huge */}
       <Clock />
 
-      {/* Status Banner */}
+      {/* Row 3: Status banner — compact */}
       <StatusBanner location={status} />
 
-      {/* Carer Note */}
-      <CarerNoteBox note={carerNote} />
+      {/* Row 4: Carer note + Reminder — flex-1 to fill remaining space */}
+      <div className="flex flex-col gap-2 flex-1 min-h-0">
+        <CarerNoteBox note={carerNote} />
+        <ReminderBox message={latestReminder} />
+      </div>
 
-      {/* Reminder */}
-      <ReminderBox message={latestReminder} />
+      {/* Row 5: Call Barry button */}
+      <CallBarryButton />
 
-      {/* Music */}
+      {/* Row 6: Music — compact horizontal row */}
       <MusicSection />
 
-      {/* Call Button */}
-      <CallBarryButton />
     </main>
   )
 }
