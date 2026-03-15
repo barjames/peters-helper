@@ -21,47 +21,15 @@ const MUSIC_ARTISTS = [
   },
 ]
 
-function getGreeting(hour: number): { text: string; className: string } {
-  if (hour >= 5 && hour < 12) {
-    return { text: 'Good morning, Peter! ☀️', className: 'text-amber-600' }
-  } else if (hour >= 12 && hour < 18) {
-    return { text: 'Good afternoon, Peter! 😊', className: 'text-orange-500' }
-  } else if (hour >= 18 && hour < 22) {
-    return { text: 'Good evening, Peter! 🌙', className: 'text-blue-600' }
-  } else {
-    return { text: 'Good night, Peter! 🌙', className: 'text-indigo-700' }
-  }
+function getGreeting(hour: number): string {
+  if (hour >= 5 && hour < 12) return 'Good morning, Peter! ☀️'
+  if (hour >= 12 && hour < 18) return 'Good afternoon, Peter! 😊'
+  if (hour >= 18 && hour < 22) return 'Good evening, Peter! 🌙'
+  return 'Good night, Peter! 🌙'
 }
 
-function Greeting() {
-  const [greeting, setGreeting] = useState<{ text: string; className: string } | null>(null)
-
-  useEffect(() => {
-    const update = () => {
-      const now = new Date()
-      const hour = parseInt(
-        now.toLocaleString('en-IE', { hour: 'numeric', hour12: false, timeZone: 'Europe/Dublin' }),
-        10
-      )
-      setGreeting(getGreeting(hour))
-    }
-    update()
-    const interval = setInterval(update, 60000)
-    return () => clearInterval(interval)
-  }, [])
-
-  if (!greeting) return null
-
-  return (
-    <div className={`text-2xl font-bold leading-tight ${greeting.className}`}>
-      {greeting.text}
-    </div>
-  )
-}
-
-function Clock() {
-  const [time, setTime] = useState('')
-  const [dayDate, setDayDate] = useState('')
+function useIrishTime() {
+  const [state, setState] = useState({ time: '', day: '', date: '', hour: 0 })
 
   useEffect(() => {
     const update = () => {
@@ -69,40 +37,32 @@ function Clock() {
       const opts = { timeZone: 'Europe/Dublin' } as const
       const day = now.toLocaleDateString('en-IE', { ...opts, weekday: 'long' })
       const date = now.toLocaleDateString('en-IE', { ...opts, day: 'numeric', month: 'long', year: 'numeric' })
-      const t = now.toLocaleTimeString('en-IE', { ...opts, hour: '2-digit', minute: '2-digit' })
-      setDayDate(`${day}, ${date}`)
-      setTime(t)
+      const time = now.toLocaleTimeString('en-IE', { ...opts, hour: '2-digit', minute: '2-digit' })
+      const hour = parseInt(
+        now.toLocaleString('en-IE', { hour: 'numeric', hour12: false, timeZone: 'Europe/Dublin' }),
+        10
+      )
+      setState({ time, day, date, hour })
     }
     update()
     const interval = setInterval(update, 10000)
     return () => clearInterval(interval)
   }, [])
 
-  return (
-    <div className="text-center flex-shrink-0 leading-none">
-      <div className="text-6xl font-bold text-gray-800 tracking-tight">{time}</div>
-      <div className="text-xl font-semibold text-gray-600 mt-1">{dayDate}</div>
-    </div>
-  )
+  return state
 }
 
-type WeatherData = {
-  ok: true
-  emoji: string
-  temp: string
-  feelsLike: string
-  description: string
-} | { ok: false }
+type WeatherData =
+  | { ok: true; emoji: string; temp: string; feelsLike: string; description: string }
+  | { ok: false }
 
-function WeatherWidget() {
+function useWeather(): WeatherData | null {
   const [weather, setWeather] = useState<WeatherData | null>(null)
-
   useEffect(() => {
     const load = async () => {
       try {
         const res = await fetch('/api/weather')
-        const data = await res.json()
-        setWeather(data)
+        setWeather(await res.json())
       } catch {
         // fail silently
       }
@@ -111,116 +71,96 @@ function WeatherWidget() {
     const interval = setInterval(load, 30 * 60 * 1000)
     return () => clearInterval(interval)
   }, [])
-
-  if (!weather || !weather.ok) return null
-
-  return (
-    <div className="text-base text-blue-700">
-      {weather.emoji} {weather.description} · {weather.temp}°C (feels like {weather.feelsLike}°C)
-    </div>
-  )
+  return weather
 }
 
-function StatusBanner({ location }: { location: 'home' | 'dublin' | null }) {
-  if (!location) return null
+type CallState = 'idle' | 'loading' | 'success' | 'error'
 
-  const isHome = location === 'home'
+// ─── Top Bar ────────────────────────────────────────────────────────────────
 
-  return (
-    <div
-      className={`flex-shrink-0 w-full rounded-xl px-4 py-2 text-center shadow-sm ${
-        isHome
-          ? 'bg-green-100 border-2 border-green-400'
-          : 'bg-amber-100 border-2 border-amber-400'
-      }`}
-    >
-      <div className={`text-xl font-bold ${isHome ? 'text-green-800' : 'text-amber-800'}`}>
-        {isHome ? '🏠 Barry is at HOME today — You can go for coffee or mass' : '🏙️ Barry is in DUBLIN today — Can\'t go to Drogheda today'}
-      </div>
-    </div>
-  )
-}
-
-function ReminderBox({ message }: { message: string | null }) {
-  if (!message) return null
+function TopBar({ hour, weather }: { hour: number; weather: WeatherData | null }) {
+  const greeting = hour ? getGreeting(hour) : ''
 
   return (
-    <div className="flex-shrink-0 w-full rounded-lg bg-blue-50 border border-blue-300 px-3 py-2 shadow-sm">
-      <span className="text-base text-blue-900">💬 {message}</span>
-    </div>
-  )
-}
-
-function CarerNoteBox({ note }: { note: string | null }) {
-  if (!note) return null
-
-  return (
-    <div className="flex-shrink-0 w-full rounded-lg bg-purple-50 px-3 py-1">
-      <span className="text-sm text-purple-700 font-medium">📋 Carer:</span>{' '}
-      <span className="text-sm text-purple-900">{note}</span>
-    </div>
-  )
-}
-
-function MusicSection() {
-  const [activeSrc, setActiveSrc] = useState<string | null>(null)
-
-  const handleArtist = (src: string) => {
-    setActiveSrc(prev => prev === src ? prev : src)
-  }
-
-  const handleStop = () => {
-    setActiveSrc(null)
-  }
-
-  return (
-    <div className="flex-shrink-0 w-full rounded-xl bg-yellow-50 border-2 border-yellow-300 px-3 py-2 shadow-sm">
-      <div className="text-sm font-semibold text-yellow-700 uppercase tracking-wide mb-2">
-        🎵 Music
-      </div>
-      <div className="flex flex-row gap-2">
-        {MUSIC_ARTISTS.map(({ emoji, label, src }) => (
-          <button
-            key={label}
-            onClick={() => handleArtist(src)}
-            className={`flex-1 flex items-center justify-center gap-2 border-2 border-yellow-400 rounded-xl px-3 py-3 text-base font-bold text-yellow-900 shadow transition-colors select-none ${
-              activeSrc === src
-                ? 'bg-yellow-300 active:bg-yellow-400'
-                : 'bg-yellow-100 hover:bg-yellow-200 active:bg-yellow-300'
-            }`}
-          >
-            <span>{emoji}</span>
-            <span>{label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Inline YouTube player — shown below buttons when active */}
-      {activeSrc && (
-        <div className="mt-2">
-          <div className="relative w-full rounded-xl overflow-hidden" style={{ paddingTop: '56.25%' }}>
-            <iframe
-              key={activeSrc}
-              src={activeSrc}
-              className="absolute inset-0 w-full h-full"
-              allow="autoplay; encrypted-media"
-              allowFullScreen
-              title="Music Player"
-            />
-          </div>
-          <button
-            onClick={handleStop}
-            className="mt-2 w-full bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold rounded-2xl px-6 py-3 text-xl shadow transition-colors select-none"
-          >
-            ⏹ Stop Music
-          </button>
-        </div>
+    <div className="flex justify-between items-center px-6 py-2 flex-shrink-0 border-b border-slate-700/50">
+      <span className="text-2xl font-semibold text-amber-400">{greeting}</span>
+      {weather && weather.ok && (
+        <span className="text-lg text-slate-300">
+          {weather.emoji} {weather.description} · {weather.temp}°C
+        </span>
       )}
     </div>
   )
 }
 
-type CallState = 'idle' | 'loading' | 'success' | 'error'
+// ─── Left Clock Column ───────────────────────────────────────────────────────
+
+function ClockColumn({ time, day, date }: { time: string; day: string; date: string }) {
+  return (
+    <div className="flex flex-col justify-center items-center w-2/5 flex-shrink-0 border-r border-slate-700/50 px-4">
+      <div className="text-8xl font-bold text-white leading-none tabular-nums tracking-tight">
+        {time}
+      </div>
+      <div className="text-2xl text-slate-300 mt-3 font-medium">{day}</div>
+      <div className="text-xl text-slate-400 mt-1">{date}</div>
+    </div>
+  )
+}
+
+// ─── Status Card ─────────────────────────────────────────────────────────────
+
+function StatusCard({ location }: { location: 'home' | 'dublin' | null }) {
+  if (!location) {
+    return (
+      <div className="flex-1 rounded-2xl bg-slate-700 flex flex-col justify-center px-6 py-4 shadow-lg min-h-0">
+        <div className="text-3xl font-bold text-white/40">Loading…</div>
+      </div>
+    )
+  }
+
+  const isHome = location === 'home'
+  return (
+    <div
+      className={`flex-1 rounded-2xl flex flex-col justify-center px-6 py-4 shadow-lg min-h-0 ${
+        isHome ? 'bg-green-800' : 'bg-amber-800'
+      }`}
+    >
+      <div className="text-3xl font-bold text-white leading-tight">
+        {isHome ? '🏠 Barry is at HOME today' : '🏙️ Barry is in DUBLIN today'}
+      </div>
+      <div className="text-xl text-white/80 mt-2 leading-snug">
+        {isHome
+          ? 'You can go for coffee or mass'
+          : "Can't go to Drogheda today"}
+      </div>
+    </div>
+  )
+}
+
+// ─── Reminder Card ───────────────────────────────────────────────────────────
+
+function ReminderCard({ message }: { message: string | null }) {
+  if (!message) return null
+  return (
+    <div className="flex-1 rounded-2xl bg-blue-900 flex items-center px-6 py-4 shadow-lg min-h-0">
+      <span className="text-2xl text-white leading-snug">💬 {message}</span>
+    </div>
+  )
+}
+
+// ─── Carer Note ──────────────────────────────────────────────────────────────
+
+function CarerNoteCard({ note }: { note: string | null }) {
+  if (!note) return null
+  return (
+    <div className="rounded-xl bg-purple-900 px-4 py-3 flex-shrink-0 shadow-md">
+      <span className="text-base text-purple-300 font-semibold">📋 Carer: </span>
+      <span className="text-base text-purple-100">{note}</span>
+    </div>
+  )
+}
+
+// ─── Call Barry ──────────────────────────────────────────────────────────────
 
 function CallBarryButton() {
   const [callState, setCallState] = useState<CallState>('idle')
@@ -242,43 +182,103 @@ function CallBarryButton() {
     }
   }
 
-  const buttonConfig = {
+  const configs: Record<CallState, { label: string; className: string; disabled: boolean }> = {
     idle: {
-      label: '📞 Call Barry',
-      className: 'bg-green-500 hover:bg-green-600 active:bg-green-700 text-white',
+      label: '📞  Call Barry',
+      className: 'bg-green-500 hover:bg-green-400 active:bg-green-600',
       disabled: false,
     },
     loading: {
       label: 'Calling…',
-      className: 'bg-green-400 text-white opacity-80 cursor-wait',
+      className: 'bg-green-400 opacity-80 cursor-wait',
       disabled: true,
     },
     success: {
-      label: '✅ Message sent to Barry — he\'s on the way',
-      className: 'bg-green-300 text-green-900 cursor-default',
+      label: "✅  Message sent — Barry's on his way",
+      className: 'bg-green-700 cursor-default',
       disabled: true,
     },
     error: {
-      label: '⚠️ Something went wrong — try again',
-      className: 'bg-red-500 hover:bg-red-600 active:bg-red-700 text-white',
+      label: '⚠️  Something went wrong — try again',
+      className: 'bg-red-500 hover:bg-red-400 active:bg-red-600',
       disabled: false,
     },
   }
 
-  const { label, className, disabled } = buttonConfig[callState]
+  const { label, className, disabled } = configs[callState]
 
   return (
     <button
       onClick={handleCall}
       disabled={disabled}
-      className={`flex-shrink-0 w-full font-bold rounded-2xl shadow-lg flex items-center justify-center px-6 py-3 text-xl transition-colors select-none ${className}`}
+      className={`mx-4 mb-2 py-5 rounded-2xl text-white text-2xl font-bold flex-shrink-0 flex items-center justify-center gap-3 shadow-xl transition-colors select-none ${className}`}
     >
       {label}
     </button>
   )
 }
 
+// ─── Music Row ───────────────────────────────────────────────────────────────
+
+function MusicRow() {
+  const [activeSrc, setActiveSrc] = useState<string | null>(null)
+
+  const handleArtist = (src: string) => {
+    setActiveSrc(prev => (prev === src ? null : src))
+  }
+
+  return (
+    <>
+      {/* Floating overlay player when music is active */}
+      {activeSrc && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-2xl mx-8 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="relative" style={{ paddingTop: '56.25%' }}>
+              <iframe
+                key={activeSrc}
+                src={activeSrc}
+                className="absolute inset-0 w-full h-full"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+                title="Music Player"
+              />
+            </div>
+            <button
+              onClick={() => setActiveSrc(null)}
+              className="w-full bg-red-600 hover:bg-red-500 text-white font-bold text-xl py-4 transition-colors select-none"
+            >
+              ⏹ Stop Music
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bottom music button row */}
+      <div className="flex flex-row gap-3 px-4 pb-3 flex-shrink-0">
+        {MUSIC_ARTISTS.map(({ emoji, label, src }) => (
+          <button
+            key={label}
+            onClick={() => handleArtist(src)}
+            className={`flex-1 py-3 rounded-xl text-white text-base font-semibold transition-colors select-none flex items-center justify-center gap-2 shadow ${
+              activeSrc === src
+                ? 'bg-amber-700 hover:bg-amber-600'
+                : 'bg-slate-700 hover:bg-slate-600'
+            }`}
+          >
+            {emoji} {label}
+          </button>
+        ))}
+      </div>
+    </>
+  )
+}
+
+// ─── Page ────────────────────────────────────────────────────────────────────
+
 export default function TabletPage() {
+  const { time, day, date, hour } = useIrishTime()
+  const weather = useWeather()
+
   const [latestReminder, setLatestReminder] = useState<string | null>(null)
   const [status, setStatus] = useState<'home' | 'dublin' | null>(null)
   const [carerNote, setCarerNote] = useState<string | null>(null)
@@ -313,9 +313,7 @@ export default function TabletPage() {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'reminders' },
-        (payload) => {
-          setLatestReminder((payload.new as Reminder).message)
-        }
+        (payload) => setLatestReminder((payload.new as Reminder).message)
       )
       .subscribe()
 
@@ -324,9 +322,7 @@ export default function TabletPage() {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'barry_status' },
-        (payload) => {
-          setStatus((payload.new as BarryStatus).location)
-        }
+        (payload) => setStatus((payload.new as BarryStatus).location)
       )
       .subscribe()
 
@@ -335,9 +331,7 @@ export default function TabletPage() {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'carer_note' },
-        (payload) => {
-          setCarerNote((payload.new as CarerNote).note || null)
-        }
+        (payload) => setCarerNote((payload.new as CarerNote).note || null)
       )
       .subscribe()
 
@@ -349,34 +343,31 @@ export default function TabletPage() {
   }, [])
 
   return (
-    <main className="h-screen overflow-hidden flex flex-col bg-gray-50 p-3 gap-2">
+    <main className="h-screen overflow-hidden flex flex-col bg-slate-900 relative">
 
-      {/* Row 1: Greeting + Weather — compact, one line each */}
-      <div className="text-center flex-shrink-0 flex flex-col items-center gap-0.5">
-        <Greeting />
-        <WeatherWidget />
+      {/* ── Top Bar ── */}
+      <TopBar hour={hour} weather={weather} />
+
+      {/* ── Main Content Area ── */}
+      <div className="flex flex-row flex-1 gap-4 px-4 pt-3 min-h-0">
+
+        {/* Left: Big Clock */}
+        <ClockColumn time={time} day={day} date={date} />
+
+        {/* Right: Cards */}
+        <div className="flex flex-col gap-3 flex-1 min-h-0 pb-3">
+          <StatusCard location={status} />
+          <ReminderCard message={latestReminder} />
+          <CarerNoteCard note={carerNote} />
+        </div>
+
       </div>
 
-      {/* Row 2: Clock — large but not huge */}
-      <Clock />
-
-      {/* Row 3: Status banner — compact */}
-      <StatusBanner location={status} />
-
-      {/* Row 4: Carer note — single line, only if content exists */}
-      <CarerNoteBox note={carerNote} />
-
-      {/* Row 5: Reminder — compact */}
-      <ReminderBox message={latestReminder} />
-
-      {/* Spacer — pushes Call Barry + Music to bottom */}
-      <div className="flex-1" />
-
-      {/* Row 7: Call Barry button */}
+      {/* ── Call Barry ── */}
       <CallBarryButton />
 
-      {/* Row 8: Music — compact with inline player */}
-      <MusicSection />
+      {/* ── Music Row (+ overlay player) ── */}
+      <MusicRow />
 
     </main>
   )
