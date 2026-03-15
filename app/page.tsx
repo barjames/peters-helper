@@ -21,6 +21,87 @@ const MUSIC_ARTISTS = [
   },
 ]
 
+const SAINTS: Record<string, string> = {
+  '01-01': 'Mary, Mother of God',
+  '01-06': 'The Epiphany',
+  '01-17': 'Saint Anthony, Abbot',
+  '01-21': 'Saint Agnes',
+  '01-25': 'Conversion of Saint Paul',
+  '01-28': 'Saint Thomas Aquinas',
+  '02-01': 'Saint Brigid of Ireland',
+  '02-02': 'Candlemas — Presentation of the Lord',
+  '02-11': 'Our Lady of Lourdes',
+  '02-14': 'Saint Valentine',
+  '03-17': '🍀 Saint Patrick\'s Day',
+  '03-19': 'Saint Joseph',
+  '03-25': 'The Annunciation',
+  '04-23': 'Saint George',
+  '04-25': 'Saint Mark',
+  '05-01': 'Saint Joseph the Worker — May Day',
+  '05-03': 'Saints Philip and James',
+  '05-31': 'Visitation of Our Lady',
+  '06-11': 'Saint Barnabas',
+  '06-13': 'Saint Anthony of Padua',
+  '06-24': 'Birth of Saint John the Baptist',
+  '06-29': 'Saints Peter and Paul',
+  '07-03': 'Saint Thomas, Apostle',
+  '07-16': 'Our Lady of Mount Carmel',
+  '07-22': 'Saint Mary Magdalene',
+  '07-25': 'Saint James, Apostle',
+  '07-26': 'Saints Joachim and Anne',
+  '08-06': 'Transfiguration of the Lord',
+  '08-15': 'Assumption of Our Lady',
+  '08-22': 'Queenship of Mary',
+  '08-24': 'Saint Bartholomew',
+  '08-28': 'Saint Augustine',
+  '08-29': 'Beheading of Saint John the Baptist',
+  '09-08': 'Birthday of Our Lady',
+  '09-14': 'Exaltation of the Holy Cross',
+  '09-15': 'Our Lady of Sorrows',
+  '09-21': 'Saint Matthew, Apostle',
+  '09-29': 'Saints Michael, Gabriel & Raphael',
+  '10-01': 'Saint Thérèse of Lisieux',
+  '10-02': 'Guardian Angels',
+  '10-04': 'Saint Francis of Assisi',
+  '10-07': 'Our Lady of the Rosary',
+  '10-18': 'Saint Luke, Evangelist',
+  '10-28': 'Saints Simon and Jude',
+  '11-01': 'All Saints Day',
+  '11-02': 'All Souls Day',
+  '11-11': 'Saint Martin of Tours',
+  '11-22': 'Saint Cecilia',
+  '11-30': 'Saint Andrew, Apostle',
+  '12-03': 'Saint Francis Xavier',
+  '12-06': 'Saint Nicholas',
+  '12-08': 'Immaculate Conception',
+  '12-13': 'Saint Lucy',
+  '12-25': '🎄 Christmas Day',
+  '12-26': 'Saint Stephen\'s Day',
+  '12-27': 'Saint John, Apostle',
+  '12-28': 'Holy Innocents',
+}
+
+const IRISH_HOLIDAYS: Record<string, string> = {
+  '01-01': '🎆 New Year\'s Day',
+  '02-03': '🕯️ Saint Brigid\'s Day (Bank Holiday)',
+  '03-17': '🍀 Saint Patrick\'s Day',
+  '05-04': '🌼 May Bank Holiday',
+  '06-01': '☀️ June Bank Holiday',
+  '08-03': '🌻 August Bank Holiday',
+  '10-26': '🍂 October Bank Holiday',
+  '12-25': '🎄 Christmas Day',
+  '12-26': '🎁 Saint Stephen\'s Day',
+}
+
+function getSaintOrHoliday(date: Date): string | null {
+  // Get the month and day in Ireland timezone
+  const month = date.toLocaleString('en-IE', { month: '2-digit', timeZone: 'Europe/Dublin' })
+  const day = date.toLocaleString('en-IE', { day: '2-digit', timeZone: 'Europe/Dublin' })
+  const key = `${month}-${day}`
+  // Prefer Irish public holiday, then saint
+  return IRISH_HOLIDAYS[key] ?? SAINTS[key] ?? null
+}
+
 function getGreeting(hour: number): string {
   if (hour >= 5 && hour < 12) return 'Good morning, Peter! ☀️'
   if (hour >= 12 && hour < 18) return 'Good afternoon, Peter! 😊'
@@ -139,11 +220,13 @@ function StatusCard({ location }: { location: 'home' | 'dublin' | null }) {
 
 // ─── Reminder Card ───────────────────────────────────────────────────────────
 
-function ReminderCard({ message }: { message: string | null }) {
-  if (!message) return null
+function ReminderCard({ message, fallback }: { message: string | null; fallback: string | null }) {
+  if (!message && !fallback) return null
+  const isFallback = !message
+  const displayText = message ? `💬 ${message}` : `⛪ ${fallback}`
   return (
-    <div className="flex-1 rounded-2xl bg-blue-700 flex items-center px-6 py-4 shadow-lg min-h-0">
-      <span className="text-2xl font-semibold text-white leading-snug">💬 {message}</span>
+    <div className={`flex-1 rounded-2xl flex items-center px-6 py-4 shadow-lg min-h-0 ${isFallback ? 'bg-indigo-700' : 'bg-blue-700'}`}>
+      <span className="text-2xl font-semibold text-white leading-snug">{displayText}</span>
     </div>
   )
 }
@@ -357,7 +440,7 @@ export default function TabletPage() {
         {/* Right: Cards */}
         <div className="flex flex-col gap-3 flex-1 min-h-0 pb-3">
           <StatusCard location={status} />
-          <ReminderCard message={latestReminder} />
+          <ReminderCard message={latestReminder} fallback={getSaintOrHoliday(new Date())} />
           <CarerNoteCard note={carerNote} />
         </div>
 
