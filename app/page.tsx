@@ -82,10 +82,10 @@ function TopBar({ hour, weather }: { hour: number; weather: WeatherData | null }
   const greeting = hour ? getGreeting(hour) : ''
 
   return (
-    <div className="flex justify-between items-center px-6 py-2 flex-shrink-0 border-b border-slate-700/50">
-      <span className="text-2xl font-semibold text-amber-400">{greeting}</span>
+    <div className="bg-amber-100 border-b border-amber-200 px-6 py-3 flex justify-between items-center flex-shrink-0">
+      <span className="text-2xl font-bold text-amber-900">{greeting}</span>
       {weather && weather.ok && (
-        <span className="text-lg text-slate-300">
+        <span className="text-lg text-amber-800">
           {weather.emoji} {weather.description} · {weather.temp}°C
         </span>
       )}
@@ -97,12 +97,12 @@ function TopBar({ hour, weather }: { hour: number; weather: WeatherData | null }
 
 function ClockColumn({ time, day, date }: { time: string; day: string; date: string }) {
   return (
-    <div className="flex flex-col justify-center items-center w-2/5 flex-shrink-0 border-r border-slate-700/50 px-4">
-      <div className="text-8xl font-bold text-white leading-none tabular-nums tracking-tight">
+    <div className="flex flex-col justify-center items-center w-2/5 flex-shrink-0 border-r border-amber-200 px-4">
+      <div className="text-8xl font-black text-gray-900 leading-none tabular-nums tracking-tight">
         {time}
       </div>
-      <div className="text-2xl text-slate-300 mt-3 font-medium">{day}</div>
-      <div className="text-xl text-slate-400 mt-1">{date}</div>
+      <div className="text-2xl font-semibold text-gray-700 mt-3">{day}</div>
+      <div className="text-xl text-gray-600 mt-1">{date}</div>
     </div>
   )
 }
@@ -112,8 +112,8 @@ function ClockColumn({ time, day, date }: { time: string; day: string; date: str
 function StatusCard({ location }: { location: 'home' | 'dublin' | null }) {
   if (!location) {
     return (
-      <div className="flex-1 rounded-2xl bg-slate-700 flex flex-col justify-center px-6 py-4 shadow-lg min-h-0">
-        <div className="text-3xl font-bold text-white/40">Loading…</div>
+      <div className="flex-1 rounded-2xl bg-gray-200 flex flex-col justify-center px-6 py-4 shadow-lg min-h-0">
+        <div className="text-3xl font-bold text-gray-500">Loading…</div>
       </div>
     )
   }
@@ -122,15 +122,15 @@ function StatusCard({ location }: { location: 'home' | 'dublin' | null }) {
   return (
     <div
       className={`flex-1 rounded-2xl flex flex-col justify-center px-6 py-4 shadow-lg min-h-0 ${
-        isHome ? 'bg-green-800' : 'bg-amber-800'
+        isHome ? 'bg-green-700' : 'bg-orange-600'
       }`}
     >
       <div className="text-3xl font-bold text-white leading-tight">
         {isHome ? '🏠 Barry is at HOME today' : '🏙️ Barry is in DUBLIN today'}
       </div>
-      <div className="text-xl text-white/80 mt-2 leading-snug">
+      <div className={`text-xl font-medium mt-2 leading-snug ${isHome ? 'text-green-100' : 'text-orange-100'}`}>
         {isHome
-          ? 'You can go for coffee or mass'
+          ? 'You can go to Drogheda'
           : "Can't go to Drogheda today"}
       </div>
     </div>
@@ -142,8 +142,8 @@ function StatusCard({ location }: { location: 'home' | 'dublin' | null }) {
 function ReminderCard({ message }: { message: string | null }) {
   if (!message) return null
   return (
-    <div className="flex-1 rounded-2xl bg-blue-900 flex items-center px-6 py-4 shadow-lg min-h-0">
-      <span className="text-2xl text-white leading-snug">💬 {message}</span>
+    <div className="flex-1 rounded-2xl bg-blue-700 flex items-center px-6 py-4 shadow-lg min-h-0">
+      <span className="text-2xl font-semibold text-white leading-snug">💬 {message}</span>
     </div>
   )
 }
@@ -153,8 +153,8 @@ function ReminderCard({ message }: { message: string | null }) {
 function CarerNoteCard({ note }: { note: string | null }) {
   if (!note) return null
   return (
-    <div className="rounded-xl bg-purple-900 px-4 py-3 flex-shrink-0 shadow-md">
-      <span className="text-base text-purple-300 font-semibold">📋 Carer: </span>
+    <div className="rounded-xl bg-purple-700 px-4 py-3 flex-shrink-0 shadow-md">
+      <span className="text-base font-bold text-white">📋 Carer: </span>
       <span className="text-base text-purple-100">{note}</span>
     </div>
   )
@@ -185,22 +185,22 @@ function CallBarryButton() {
   const configs: Record<CallState, { label: string; className: string; disabled: boolean }> = {
     idle: {
       label: '📞  Call Barry',
-      className: 'bg-green-500 hover:bg-green-400 active:bg-green-600',
+      className: 'bg-green-500 hover:bg-green-400 active:bg-green-600 text-white',
       disabled: false,
     },
     loading: {
       label: 'Calling…',
-      className: 'bg-green-400 opacity-80 cursor-wait',
+      className: 'bg-green-400 opacity-80 cursor-wait text-white',
       disabled: true,
     },
     success: {
       label: "✅  Message sent — Barry's on his way",
-      className: 'bg-green-700 cursor-default',
+      className: 'bg-green-300 text-green-900 cursor-default',
       disabled: true,
     },
     error: {
       label: '⚠️  Something went wrong — try again',
-      className: 'bg-red-500 hover:bg-red-400 active:bg-red-600',
+      className: 'bg-red-500 hover:bg-red-400 active:bg-red-600 text-white',
       disabled: false,
     },
   }
@@ -211,7 +211,7 @@ function CallBarryButton() {
     <button
       onClick={handleCall}
       disabled={disabled}
-      className={`mx-4 mb-2 py-5 rounded-2xl text-white text-2xl font-bold flex-shrink-0 flex items-center justify-center gap-3 shadow-xl transition-colors select-none ${className}`}
+      className={`mx-4 mb-2 py-5 rounded-2xl text-2xl font-bold flex-shrink-0 flex items-center justify-center gap-3 shadow-xl transition-colors select-none ${className}`}
     >
       {label}
     </button>
@@ -261,8 +261,8 @@ function MusicRow() {
             onClick={() => handleArtist(src)}
             className={`flex-1 py-3 rounded-xl text-white text-base font-semibold transition-colors select-none flex items-center justify-center gap-2 shadow ${
               activeSrc === src
-                ? 'bg-amber-700 hover:bg-amber-600'
-                : 'bg-slate-700 hover:bg-slate-600'
+                ? 'bg-amber-600 hover:bg-amber-500'
+                : 'bg-gray-800 hover:bg-gray-700'
             }`}
           >
             {emoji} {label}
@@ -343,7 +343,7 @@ export default function TabletPage() {
   }, [])
 
   return (
-    <main className="h-screen overflow-hidden flex flex-col bg-slate-900 relative">
+    <main className="h-screen overflow-hidden flex flex-col bg-amber-50 relative">
 
       {/* ── Top Bar ── */}
       <TopBar hour={hour} weather={weather} />
